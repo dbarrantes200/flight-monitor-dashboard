@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<!-- Flight Monitor PRO — Dashboard público de precios de vuelos · v1.0 (2026-10-18) -->
+<html lang="es" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="docTitle">Flight Monitor PRO — Dashboard de precios de vuelos</title>
+<meta name="description" data-i18n-content="metaDesc" content="Dashboard público del monitor de precios de vuelos: tendencias por ruta, aerolínea y mínimos históricos.">
+<link rel="canonical" href="https://vuelos.learnandbuildit.com/">
+<!-- GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5VGT1LL1V7"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-5VGT1LL1V7');
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f1c; --bg2:#0e1428; --card:#131b33; --card2:#182136;
+  --line:rgba(255,255,255,.09); --text:#eef1f7; --muted:#9aa3b8;
+  --amber:#f5a524; --amber-soft:rgba(245,165,36,.14); --teal:#2dd4bf;
+  --danger:#fb7185; --radius:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; font-family:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color:var(--text); background:var(--bg); line-height:1.55; min-height:100vh;
+  background-image:
+    radial-gradient(900px 420px at 85% -5%, rgba(245,165,36,.07), transparent 60%),
+    radial-gradient(1000px 520px at -10% 10%, rgba(45,212,191,.06), transparent 60%),
+    linear-gradient(var(--bg), var(--bg2));
+}
+a{color:var(--amber)}
+.site-header{
+  position:sticky; top:0; z-index:20;
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  padding:.7rem clamp(1rem,4vw,2.5rem);
+  background:rgba(11,15,28,.82); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex; align-items:center; gap:.6rem; font-weight:700; letter-spacing:.06em; font-size:.95rem}
+.brand .plane{font-size:1.3rem}
+.brand em{font-style:normal; color:var(--amber)}
+.lang-toggle{display:flex; gap:.35rem}
+.lang-toggle button{
+  background:transparent; color:var(--muted); border:1px solid var(--line);
+  border-radius:999px; padding:.3rem .9rem; font:inherit; font-weight:600; cursor:pointer;
+}
+.lang-toggle button[aria-pressed="true"]{background:var(--amber); color:#1a1206; border-color:var(--amber)}
+main{max-width:1100px; margin:0 auto; padding:0 clamp(1rem,4vw,2.5rem) 3rem}
+.hero{padding:clamp(2rem,5vw,3.5rem) 0 1.2rem; text-align:center}
+.hero h1{font-size:clamp(1.9rem,5vw,3rem); margin:.2rem 0 .6rem; font-weight:700; line-height:1.15}
+.hero h1 .accent{color:var(--amber)}
+.hero p{color:var(--muted); max-width:44rem; margin:0 auto}
+.updated{margin-top:.9rem; font-size:.9rem; color:var(--muted)}
+.updated strong{color:var(--text)}
+.card{
+  background:linear-gradient(180deg,var(--card),var(--card2));
+  border:1px solid var(--line); border-radius:var(--radius);
+  padding:clamp(1rem,2.5vw,1.5rem); margin-top:1.4rem;
+  box-shadow:0 12px 30px rgba(0,0,0,.28);
+}
+.card h2{margin:0 0 .9rem; font-size:1.15rem; letter-spacing:.02em}
+.card h2 .ico{margin-right:.4rem}
+.stats{display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-top:1.4rem}
+.stat{
+  background:linear-gradient(180deg,var(--card),var(--card2));
+  border:1px solid var(--line); border-radius:var(--radius);
+  padding:1.1rem 1rem; text-align:center; transition:transform .25s ease, border-color .25s ease;
+}
+.stat:hover{transform:translateY(-4px); border-color:rgba(245,165,36,.4)}
+.stat .num{font-size:clamp(1.5rem,3.4vw,2.1rem); font-weight:700; color:var(--amber)}
+.stat .lbl{font-size:.85rem; color:var(--muted); margin-top:.25rem}
+.filter-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1rem 1.2rem; align-items:end}
+.field{display:flex; flex-direction:column; gap:.35rem; font-size:.9rem}
+.field span{color:var(--muted); font-weight:500}
+.field-wide{grid-column:span 2}
+select, input[type="date"], input[type="range"]{
+  font:inherit; color:var(--text); background:#0c1226;
+  border:1px solid var(--line); border-radius:10px; padding:.55rem .7rem; width:100%;
+}
+select:focus-visible, input:focus-visible, button:focus-visible{outline:2px solid var(--amber); outline-offset:2px}
+input[type="range"]{padding:0; accent-color:var(--amber)}
+.check{display:flex; align-items:center; gap:.6rem; font-size:.95rem; cursor:pointer; user-select:none}
+.check input{width:1.15rem; height:1.15rem; accent-color:var(--amber)}
+.btn{
+  font:inherit; font-weight:700; cursor:pointer; border:none; border-radius:10px;
+  background:var(--amber); color:#1a1206; padding:.6rem 1.2rem; justify-self:start;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.btn:hover{transform:translateY(-2px); box-shadow:0 8px 18px rgba(245,165,36,.35)}
+#legend{display:flex; flex-wrap:wrap; gap:.4rem .9rem; margin:.6rem 0 .2rem; font-size:.88rem; color:var(--muted)}
+#legend .sw{display:inline-block; width:.75rem; height:.75rem; border-radius:50%; margin-right:.35rem; vertical-align:baseline}
+.chart-wrap{position:relative; width:100%}
+canvas#priceChart{display:block; width:100%}
+.table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch}
+table{width:100%; border-collapse:collapse; font-size:.93rem; min-width:640px}
+thead th{
+  text-align:left; color:var(--muted); font-weight:600; font-size:.82rem; text-transform:uppercase; letter-spacing:.05em;
+  padding:.6rem .7rem; border-bottom:1px solid var(--line); white-space:nowrap;
+}
+tbody td{padding:.6rem .7rem; border-bottom:1px solid rgba(255,255,255,.05); vertical-align:middle}
+tbody tr:hover{background:rgba(245,165,36,.05)}
+td.price{font-weight:700; color:var(--amber); white-space:nowrap}
+.badge{
+  display:inline-block; font-size:.78rem; font-weight:700; color:var(--amber);
+  border:1px solid rgba(245,165,36,.55); background:var(--amber-soft);
+  border-radius:999px; padding:.15rem .6rem; white-space:nowrap;
+}
+.rows-note{color:var(--muted); font-size:.85rem; margin:.8rem 0 0}
+.state{text-align:center; padding:3rem 1rem; color:var(--muted)}
+.state h2{color:var(--text); margin:.4rem 0 .6rem}
+.state .big{font-size:2.6rem}
+footer{max-width:1100px; margin:0 auto; padding:1.5rem clamp(1rem,4vw,2.5rem) 3rem; color:var(--muted); font-size:.72rem}
+footer h3{font-size:17px; color:var(--text); margin:0 0 .4rem}
+footer p{margin:.3rem 0}
+.reveal{opacity:0; transform:translateY(26px); transition:opacity .7s ease, transform .7s ease}
+.reveal.visible{opacity:1; transform:none}
+@media (prefers-reduced-motion: reduce){
+  .reveal{opacity:1; transform:none; transition:none}
+  html{scroll-behavior:auto}
+  *{animation:none!important}
+}
+@media (max-width:900px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .filter-grid{grid-template-columns:1fr 1fr}
+  .field-wide{grid-column:span 2}
+}
+@media (max-width:560px){
+  .filter-grid{grid-template-columns:1fr}
+  .field-wide{grid-column:span 1}
+  .btn{justify-self:stretch}
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="brand"><span class="plane" aria-hidden="true">✈️</span><span>FLIGHT MONITOR <em>PRO</em></span></div>
+  <div class="lang-toggle" role="group" aria-label="Language / Idioma">
+    <button type="button" id="langEs" aria-pressed="true">ES</button>
+    <button type="button" id="langEn" aria-pressed="false">EN</button>
+  </div>
+</header>
+<main id="root">
+  <section class="hero reveal">
+    <h1><span data-i18n="heroTitleA">Dashboard de</span> <span class="accent" data-i18n="heroTitleB">precios de vuelos</span></h1>
+    <p data-i18n="heroSub">Tendencias de precios por ruta, aerolínea y mínimos históricos, actualizadas automáticamente cada 6 horas por el monitor.</p>
+    <p class="updated"><span data-i18n="updatedLabel">Última actualización:</span> <strong id="updatedAt">—</strong></p>
+  </section>
+
+  <section class="stats reveal" id="statsSection" aria-label="Stats">
+    <div class="stat"><div class="num" id="statRoutes">0</div><div class="lbl" data-i18n="statsRoutes">Rutas monitoreadas</div></div>
+    <div class="stat"><div class="num" id="statRecords">0</div><div class="lbl" data-i18n="statsRecords">Registros de precio</div></div>
+    <div class="stat"><div class="num" id="statLowest">—</div><div class="lbl" data-i18n="statsLowest">Precio más bajo</div></div>
+    <div class="stat"><div class="num" id="statLast7">0</div><div class="lbl" data-i18n="statsLast7">Registros (7 días)</div></div>
+  </section>
+
+  <section class="card reveal" id="filtersCard">
+    <h2><span class="ico" aria-hidden="true">🔎</span><span data-i18n="filtersTitle">Filtros</span></h2>
+    <div class="filter-grid">
+      <label class="field"><span data-i18n="fRoute">Ruta</span><select id="fRoute"></select></label>
+      <label class="field"><span data-i18n="fAirline">Aerolínea</span><select id="fAirline"></select></label>
+      <label class="field"><span data-i18n="fFrom">Salida desde</span><input type="date" id="fFrom"></label>
+      <label class="field"><span data-i18n="fTo">Salida hasta</span><input type="date" id="fTo"></label>
+      <label class="field field-wide"><span><span data-i18n="fMaxPrice">Precio máximo</span>: <strong id="maxPriceLabel"></strong></span><input type="range" id="fMaxPrice" step="1"></label>
+      <label class="check"><input type="checkbox" id="fOnlyLows"><span data-i18n="fOnlyLows">Solo mínimos históricos</span></label>
+      <button type="button" class="btn" id="fReset" data-i18n="fReset">Limpiar filtros</button>
+    </div>
+  </section>
+
+  <section class="card reveal" id="chartCard">
+    <h2><span class="ico" aria-hidden="true">📈</span><span data-i18n="chartTitle">Tendencia de precios por ruta</span></h2>
+    <div id="legend" aria-hidden="true"></div>
+    <div class="chart-wrap"><canvas id="priceChart" role="img" aria-label="Price trend chart"></canvas></div>
+  </section>
+
+  <section class="card reveal" id="tableCard">
+    <h2><span class="ico" aria-hidden="true">🧾</span><span data-i18n="tableTitle">Registros de precios</span></h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th data-i18n="thRoute">Ruta</th>
+          <th data-i18n="thDeparture">Salida</th>
+          <th data-i18n="thReturn">Regreso</th>
+          <th data-i18n="thAirline">Aerolínea</th>
+          <th data-i18n="thPrice">Precio</th>
+          <th data-i18n="thRecorded">Registrado</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="recordsBody"></tbody>
+      </table>
+    </div>
+    <p class="rows-note" id="rowsNote"></p>
+  </section>
+
+  <section class="card state reveal" id="emptyState" hidden>
+    <div class="big" aria-hidden="true">🛫</div>
+    <h2 data-i18n="emptyTitle">Aún no hay datos de precios</h2>
+    <p data-i18n="emptyMsg">El monitor corre cada 6 horas y publica aquí los precios que encuentra. Vuelve pronto: los datos aparecerán automáticamente.</p>
+  </section>
+
+  <section class="card state reveal" id="noResults" hidden>
+    <div class="big" aria-hidden="true">🔍</div>
+    <h2 data-i18n="noResultsTitle">Sin resultados con esos filtros</h2>
+    <p data-i18n="noResultsMsg">Ajusta o limpia los filtros para ver más registros.</p>
+  </section>
+</main>
+<footer>
+  <h3 data-i18n="footerAbout">Acerca de este dashboard</h3>
+  <p data-i18n="footerNote">Los precios son tarifas en caché encontradas por usuarios de Aviasales en las últimas 48 horas y pueden cambiar al momento de reservar. Este es un espejo público de solo datos del monitor privado Flight Monitor PRO.</p>
+  <p>© 2026 LearnAndBuildIt · <a href="mailto:info@learnandbuildit.com">info@learnandbuildit.com</a></p>
+</footer>
+<noscript><p style="text-align:center;padding:2rem">Este dashboard necesita JavaScript / This dashboard needs JavaScript.</p></noscript>
+<script>
+/* ===== Datos de referencia ===== */
+const AIRLINES = {
+  AA:'American Airlines', DL:'Delta Air Lines', UA:'United Airlines',
+  AV:'Avianca', CM:'Copa Airlines', NK:'Spirit Airlines', F9:'Frontier Airlines',
+  B6:'JetBlue', AS:'Alaska Airlines', WN:'Southwest Airlines', LA:'LATAM Airlines',
+  AM:'Aeroméxico', IB:'Iberia', TP:'TAP Air Portugal', AD:'Azul', G3:'Gol',
+  VY:'Vueling', UX:'Air Europa', '2H':'Greater Bay Airlines'
+};
+const ROUTE_COLORS = ['#f5a524','#2dd4bf','#fb7185','#a78bfa','#a3e635','#fb923c','#38bdf8','#f472b6'];
+const MAX_ROWS = 200;
+
+/* ===== i18n (ES/EN) ===== */
+const I18N = {
+es: {
+  docTitle:'Flight Monitor PRO — Dashboard de precios de vuelos',
+  metaDesc:'Dashboard público del monitor de precios de vuelos: tendencias por ruta, aerolínea y mínimos históricos.',
+  heroTitleA:'Dashboard de', heroTitleB:'precios de vuelos',
+  heroSub:'Tendencias de precios por ruta, aerolínea y mínimos históricos, actualizadas automáticamente cada 6 horas por el monitor.',
+  updatedLabel:'Última actualización:', updatedNever:'sin datos aún',
+  statsRoutes:'Rutas monitoreadas', statsRecords:'Registros de precio',
+  statsLowest:'Precio más bajo', statsLast7:'Registros (7 días)',
+  filtersTitle:'Filtros',
+  fRoute:'Ruta', fAllRoutes:'Todas las rutas', fAirline:'Aerolínea', fAllAirlines:'Todas las aerolíneas',
+  fFrom:'Salida desde', fTo:'Salida hasta', fMaxPrice:'Precio máximo', fOnlyLows:'Solo mínimos históricos', fReset:'Limpiar filtros',
+  chartTitle:'Tendencia de precios por ruta',
+  tableTitle:'Registros de precios',
+  thRoute:'Ruta', thDeparture:'Salida', thReturn:'Regreso', thAirline:'Aerolínea', thPrice:'Precio', thRecorded:'Registrado',
+  lowBadge:'🏆 Mínimo histórico',
+  rowsNote:function(n,m){return 'Mostrando '+n+' de '+m+' registros.';},
+  emptyTitle:'Aún no hay datos de precios',
+  emptyMsg:'El monitor corre cada 6 horas y publica aquí los precios que encuentra. Vuelve pronto: los datos aparecerán automáticamente.',
+  noResultsTitle:'Sin resultados con esos filtros',
+  noResultsMsg:'Ajusta o limpia los filtros para ver más registros.',
+  footerAbout:'Acerca de este dashboard',
+  footerNote:'Los precios son tarifas en caché encontradas por usuarios de Aviasales en las últimas 48 horas y pueden cambiar al momento de reservar. Este es un espejo público de solo datos del monitor privado Flight Monitor PRO.',
+  oneWay:'solo ida'
+},
+en: {
+  docTitle:'Flight Monitor PRO — Flight price dashboard',
+  metaDesc:'Public dashboard of the flight price monitor: trends by route, airline and all-time lows.',
+  heroTitleA:'Flight', heroTitleB:'price dashboard',
+  heroSub:'Price trends by route, airline and all-time lows, automatically updated every 6 hours by the monitor.',
+  updatedLabel:'Last updated:', updatedNever:'no data yet',
+  statsRoutes:'Routes monitored', statsRecords:'Price records',
+  statsLowest:'Lowest price', statsLast7:'Records (7 days)',
+  filtersTitle:'Filters',
+  fRoute:'Route', fAllRoutes:'All routes', fAirline:'Airline', fAllAirlines:'All airlines',
+  fFrom:'Departure from', fTo:'Departure to', fMaxPrice:'Max price', fOnlyLows:'Only all-time lows', fReset:'Clear filters',
+  chartTitle:'Price trend by route',
+  tableTitle:'Price records',
+  thRoute:'Route', thDeparture:'Departure', thReturn:'Return', thAirline:'Airline', thPrice:'Price', thRecorded:'Recorded',
+  lowBadge:'🏆 All-time low',
+  rowsNote:function(n,m){return 'Showing '+n+' of '+m+' records.';},
+  emptyTitle:'No price data yet',
+  emptyMsg:'The monitor runs every 6 hours and publishes the fares it finds here. Check back soon — data will appear automatically.',
+  noResultsTitle:'No results with these filters',
+  noResultsMsg:'Adjust or clear the filters to see more records.',
+  footerAbout:'About this dashboard',
+  footerNote:'Prices are cached fares found by Aviasales users in the last 48 hours and may change at booking time. This is a public data-only mirror of the private Flight Monitor PRO monitor.',
+  oneWay:'one way'
+}};
+let LANG = 'es';
+function t(k){ const d = I18N[LANG] || I18N.es; return (d[k] !== undefined) ? d[k] : (I18N.es[k] !== undefined ? I18N.es[k] : k); }
+function airlineName(code){ return AIRLINES[code] || code; }
+function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ===== Utilidades puras (sin DOM) ===== */
+function parseTs(ts){ const n = Date.parse(ts); return isNaN(n) ? null : n; }
+
+// Aplana el historial y marca isLow por ruta (recorrido cronológico, mínimo estricto)
+function enrichRecords(history){
+  const out = [];
+  for (const route of Object.keys(history || {})){
+    const recs = (history[route] || []).slice().sort(function(a,b){
+      const ta = parseTs(a.timestamp), tb = parseTs(b.timestamp);
+      return (ta === null ? 0 : ta) - (tb === null ? 0 : tb);
+    });
+    let best = Infinity;
+    for (const r of recs){
+      const price = Number(r.price);
+      const ok = isFinite(price);
+      const isLow = ok && price < best;
+      if (ok) best = Math.min(best, price);
+      out.push({
+        route: route,
+        timestamp: r.timestamp || '',
+        ts: parseTs(r.timestamp),
+        price: ok ? price : null,
+        currency: r.currency || 'USD',
+        airline: String(r.airline || 'N/A').toUpperCase(),
+        departure_date: r.departure_date || '',
+        return_date: r.return_date || '',
+        isLow: isLow
+      });
+    }
+  }
+  return out;
+}
+
+function applyFilters(records, f){
+  const fromT = f.fromDate ? Date.parse(f.fromDate + 'T00:00:00') : null;
+  const toT = f.toDate ? Date.parse(f.toDate + 'T23:59:59') : null;
+  return records.filter(function(r){
+    if (r.price === null) return false;
+    if (f.route !== 'all' && r.route !== f.route) return false;
+    if (f.airline !== 'all' && r.airline !== f.airline) return false;
+    if (f.onlyLows && !r.isLow) return false;
+    if (f.maxPrice != null && r.price > f.maxPrice) return false;
+    if (fromT !== null || toT !== null){
+      const d = r.departure_date ? Date.parse(r.departure_date + 'T00:00:00') : NaN;
+      if (isNaN(d)) return false;
+      if (fromT !== null && d < fromT) return false;
+      if (toT !== null && d > toT) return false;
+    }
+    return true;
+  });
+}
+
+function computeStats(records){
+  const routes = {};
+  let lowest = null, last7 = 0;
+  const now = Date.now(), week = 7 * 24 * 3600 * 1000;
+  for (const r of records){
+    routes[r.route] = 1;
+    if (r.price !== null && (lowest === null || r.price < lowest)) lowest = r.price;
+    if (r.ts !== null && (now - r.ts) <= week) last7++;
+  }
+  return { routes: Object.keys(routes).length, total: records.length, lowest: lowest, last7: last7 };
+}
+
+function fmtMoney(price, currency, locale){
+  try { return new Intl.NumberFormat(locale, { style:'currency', currency: currency || 'USD', maximumFractionDigits: 0 }).format(price); }
+  catch(e){ return (currency || 'USD') + ' ' + price; }
+}
+function fmtDate(dateStr, locale){
+  const n = dateStr ? Date.parse(dateStr + 'T00:00:00') : NaN;
+  if (isNaN(n)) return '—';
+  return new Intl.DateTimeFormat(locale, { year:'numeric', month:'short', day:'numeric' }).format(new Date(n));
+}
+function fmtDateTime(ts, locale){
+  const n = parseTs(ts);
+  if (n === null) return '—';
+  return new Intl.DateTimeFormat(locale, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }).format(new Date(n));
+}
+</script>
+<script>
+/* ===== Estado global ===== */
+let ALL_RECORDS = [];
+let HISTORY_RAW = {};
+
+/* ===== Idioma ===== */
+function setLang(l){
+  LANG = (l === 'en') ? 'en' : 'es';
+  try { localStorage.setItem('site-locale', LANG); } catch(e){}
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    const v = t(el.getAttribute('data-i18n'));
+    if (typeof v === 'string') el.textContent = v;
+  });
+  document.querySelectorAll('[data-i18n-content]').forEach(function(el){
+    const v = t(el.getAttribute('data-i18n-content'));
+    if (typeof v === 'string') el.setAttribute('content', v);
+  });
+  document.getElementById('langEs').setAttribute('aria-pressed', LANG === 'es' ? 'true' : 'false');
+  document.getElementById('langEn').setAttribute('aria-pressed', LANG === 'en' ? 'true' : 'false');
+  if (ALL_RECORDS.length){
+    // Reconstruir opciones en el nuevo idioma conservando la selección actual
+    const cur = readFilters();
+    buildFilterOptions();
+    const rSel = document.getElementById('fRoute');
+    if (Array.prototype.some.call(rSel.options, function(o){ return o.value === cur.route; })) rSel.value = cur.route;
+    const aSel = document.getElementById('fAirline');
+    if (Array.prototype.some.call(aSel.options, function(o){ return o.value === cur.airline; })) aSel.value = cur.airline;
+    document.getElementById('fFrom').value = cur.fromDate;
+    document.getElementById('fTo').value = cur.toDate;
+    const slider = document.getElementById('fMaxPrice');
+    slider.value = Math.min(cur.maxPrice, Number(slider.max));
+    document.getElementById('maxPriceLabel').textContent =
+      fmtMoney(Number(slider.value), 'USD', LANG === 'es' ? 'es-ES' : 'en-US');
+    document.getElementById('fOnlyLows').checked = cur.onlyLows;
+    refresh(); // re-render dinámico en el nuevo idioma
+  }
+}
+
+/* ===== Filtros: lectura/escritura ===== */
+function readFilters(){
+  return {
+    route: document.getElementById('fRoute').value,
+    airline: document.getElementById('fAirline').value,
+    fromDate: document.getElementById('fFrom').value,
+    toDate: document.getElementById('fTo').value,
+    maxPrice: Number(document.getElementById('fMaxPrice').value),
+    onlyLows: document.getElementById('fOnlyLows').checked
+  };
+}
+function buildFilterOptions(){
+  const routes = [], airlines = {};
+  for (const r of ALL_RECORDS){ if (routes.indexOf(r.route) < 0) routes.push(r.route); airlines[r.airline] = 1; }
+  routes.sort();
+  const rSel = document.getElementById('fRoute');
+  rSel.innerHTML = '<option value="all">' + esc(t('fAllRoutes')) + '</option>' +
+    routes.map(function(x){ return '<option value="' + esc(x) + '">' + esc(x) + '</option>'; }).join('');
+  const codes = Object.keys(airlines).sort();
+  const aSel = document.getElementById('fAirline');
+  aSel.innerHTML = '<option value="all">' + esc(t('fAllAirlines')) + '</option>' +
+    codes.map(function(c){ return '<option value="' + esc(c) + '">' + esc(airlineName(c) + ' (' + c + ')') + '</option>'; }).join('');
+  // Slider de precio: rango real de los datos
+  const prices = ALL_RECORDS.map(function(r){ return r.price; }).filter(function(p){ return p !== null; });
+  const slider = document.getElementById('fMaxPrice');
+  const lo = Math.floor(Math.min.apply(null, prices));
+  let hi = Math.ceil(Math.max.apply(null, prices));
+  if (hi <= lo) hi = lo + 1;
+  slider.min = lo; slider.max = hi; slider.value = hi;
+  document.getElementById('maxPriceLabel').textContent = fmtMoney(hi, 'USD', LANG === 'es' ? 'es-ES' : 'en-US');
+}
+
+/* ===== Stats ===== */
+function renderStats(){
+  const s = computeStats(ALL_RECORDS);
+  const loc = LANG === 'es' ? 'es-ES' : 'en-US';
+  document.getElementById('statRoutes').textContent = s.routes;
+  document.getElementById('statRecords').textContent = s.total;
+  document.getElementById('statLowest').textContent = s.lowest === null ? '—' : fmtMoney(s.lowest, 'USD', loc);
+  document.getElementById('statLast7').textContent = s.last7;
+  const allTs = ALL_RECORDS.map(function(r){ return r.ts; }).filter(function(x){ return x !== null; });
+  document.getElementById('updatedAt').textContent = allTs.length
+    ? new Intl.DateTimeFormat(loc, { dateStyle:'medium', timeStyle:'short' }).format(new Date(Math.max.apply(null, allTs)))
+    : t('updatedNever');
+}
+
+/* ===== Gráfica (canvas, vanilla) ===== */
+function drawChart(records){
+  const canvas = document.getElementById('priceChart');
+  const wrap = canvas.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  const W = Math.max(280, wrap.clientWidth);
+  const H = Math.max(300, Math.min(440, Math.round(W * 0.45)));
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  const loc = LANG === 'es' ? 'es-ES' : 'en-US';
+  const padL = 64, padR = 14, padT = 14, padB = 42;
+  const iw = W - padL - padR, ih = H - padT - padB;
+
+  // Agrupar por ruta (orden cronológico)
+  const byRoute = {};
+  for (const r of records){
+    if (r.ts === null || r.price === null) continue;
+    (byRoute[r.route] = byRoute[r.route] || []).push(r);
+  }
+  const routes = Object.keys(byRoute);
+  Object.keys(byRoute).forEach(function(k){ byRoute[k].sort(function(a,b){ return a.ts - b.ts; }); });
+
+  // Leyenda
+  document.getElementById('legend').innerHTML = routes.map(function(k, i){
+    return '<span><span class="sw" style="background:' + ROUTE_COLORS[i % ROUTE_COLORS.length] + '"></span>' + esc(k) + '</span>';
+  }).join('');
+
+  if (!routes.length){
+    ctx.fillStyle = '#9aa3b8'; ctx.font = '14px Barlow, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(t('noResultsMsg'), W / 2, H / 2);
+    return;
+  }
+
+  let minP = Infinity, maxP = -Infinity, minT = Infinity, maxT = -Infinity;
+  for (const k of routes) for (const r of byRoute[k]){
+    minP = Math.min(minP, r.price); maxP = Math.max(maxP, r.price);
+    minT = Math.min(minT, r.ts); maxT = Math.max(maxT, r.ts);
+  }
+  if (maxP === minP){ maxP += 5; minP = Math.max(0, minP - 5); }
+  if (maxT === minT){ maxT += 3600000; minT -= 3600000; }
+  const pad = (maxP - minP) * 0.08;
+  const y0 = Math.max(0, minP - pad), y1 = maxP + pad;
+  const X = function(ts){ return padL + (ts - minT) / (maxT - minT) * iw; };
+  const Y = function(p){ return padT + ih - (p - y0) / (y1 - y0) * ih; };
+
+  // Rejilla + etiquetas Y
+  ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.fillStyle = '#9aa3b8';
+  ctx.font = '12px Barlow, sans-serif'; ctx.textAlign = 'right'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++){
+    const p = y0 + (y1 - y0) * i / 4, y = Y(p);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillText(fmtMoney(Math.round(p), 'USD', loc), padL - 8, y + 4);
+  }
+  // Etiquetas X
+  ctx.textAlign = 'center';
+  const nTicks = Math.min(6, 2 + Math.floor(iw / 130));
+  for (let i = 0; i < nTicks; i++){
+    const ts = minT + (maxT - minT) * i / (nTicks - 1);
+    const lbl = new Intl.DateTimeFormat(loc, { month:'short', day:'numeric' }).format(new Date(ts));
+    ctx.fillText(lbl, X(ts), H - padB + 22);
+  }
+  // Líneas + puntos
+  routes.forEach(function(k, i){
+    const pts = byRoute[k];
+    const col = ROUTE_COLORS[i % ROUTE_COLORS.length];
+    ctx.strokeStyle = col; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    pts.forEach(function(r, j){ const x = X(r.ts), y = Y(r.price); j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+    ctx.fillStyle = col;
+    for (const r of pts){
+      ctx.beginPath(); ctx.arc(X(r.ts), Y(r.price), r.isLow ? 5 : 3.4, 0, Math.PI * 2); ctx.fill();
+      if (r.isLow){ ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.4; ctx.stroke(); }
+    }
+  });
+}
+
+/* ===== Tabla ===== */
+function renderTable(records){
+  const loc = LANG === 'es' ? 'es-ES' : 'en-US';
+  const sorted = records.slice().sort(function(a, b){ return (b.ts || 0) - (a.ts || 0); });
+  const shown = sorted.slice(0, MAX_ROWS);
+  document.getElementById('recordsBody').innerHTML = shown.map(function(r){
+    const ret = (r.return_date && r.return_date !== 'N/A') ? fmtDate(r.return_date, loc) : '—';
+    return '<tr>' +
+      '<td>' + esc(r.route) + '</td>' +
+      '<td>' + esc(fmtDate(r.departure_date, loc)) + '</td>' +
+      '<td>' + esc(ret) + '</td>' +
+      '<td>' + esc(airlineName(r.airline)) + ' <span style="color:#9aa3b8">(' + esc(r.airline) + ')</span></td>' +
+      '<td class="price">' + esc(fmtMoney(r.price, r.currency, loc)) + '</td>' +
+      '<td>' + esc(fmtDateTime(r.timestamp, loc)) + '</td>' +
+      '<td>' + (r.isLow ? '<span class="badge">' + esc(t('lowBadge')) + '</span>' : '') + '</td>' +
+    '</tr>';
+  }).join('');
+  const fn = t('rowsNote');
+  document.getElementById('rowsNote').textContent = typeof fn === 'function' ? fn(shown.length, sorted.length) : '';
+}
+
+/* ===== Render principal ===== */
+function refresh(){
+  renderStats();
+  const f = readFilters();
+  const filtered = applyFilters(ALL_RECORDS, f);
+  const hasData = ALL_RECORDS.length > 0;
+  document.getElementById('emptyState').hidden = hasData;
+  document.getElementById('statsSection').style.display = hasData ? '' : 'none';
+  document.getElementById('filtersCard').style.display = hasData ? '' : 'none';
+  document.getElementById('chartCard').style.display = hasData ? '' : 'none';
+  document.getElementById('tableCard').style.display = hasData ? '' : 'none';
+  document.getElementById('noResults').hidden = !hasData || filtered.length > 0;
+  if (hasData){
+    drawChart(filtered);
+    renderTable(filtered);
+  }
+  // Re-dispara reveal para secciones que se muestran
+  document.querySelectorAll('.reveal:not(.visible)').forEach(function(el){
+    const r = el.getBoundingClientRect();
+    if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('visible');
+  });
+}
+
+function resetFilters(){
+  document.getElementById('fRoute').value = 'all';
+  document.getElementById('fAirline').value = 'all';
+  document.getElementById('fFrom').value = '';
+  document.getElementById('fTo').value = '';
+  document.getElementById('fOnlyLows').checked = false;
+  buildFilterOptions();
+  refresh();
+}
+
+/* ===== Init ===== */
+function initDashboard(){
+  try {
+    const saved = localStorage.getItem('site-locale');
+    if (saved === 'en' || saved === 'es') LANG = saved;
+  } catch(e){}
+  setLang(LANG);
+  document.getElementById('langEs').addEventListener('click', function(){ setLang('es'); });
+  document.getElementById('langEn').addEventListener('click', function(){ setLang('en'); });
+
+  fetch('./data.json?ts=' + Date.now())
+    .then(function(res){ if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+    .then(function(history){
+      HISTORY_RAW = (history && typeof history === 'object') ? history : {};
+      ALL_RECORDS = enrichRecords(HISTORY_RAW);
+      renderStats();
+      if (ALL_RECORDS.length){
+        buildFilterOptions();
+        ['fRoute','fAirline','fFrom','fTo','fMaxPrice','fOnlyLows'].forEach(function(id){
+          document.getElementById(id).addEventListener('input', refresh);
+          document.getElementById(id).addEventListener('change', refresh);
+        });
+        document.getElementById('fReset').addEventListener('click', resetFilters);
+        document.getElementById('fMaxPrice').addEventListener('input', function(){
+          document.getElementById('maxPriceLabel').textContent =
+            fmtMoney(Number(this.value), 'USD', LANG === 'es' ? 'es-ES' : 'en-US');
+        });
+      }
+      refresh();
+    })
+    .catch(function(){
+      ALL_RECORDS = [];
+      refresh(); // muestra estado vacío
+    });
+
+  // Reveal on scroll
+  const io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  window.addEventListener('resize', function(){ if (ALL_RECORDS.length) drawChart(applyFilters(ALL_RECORDS, readFilters())); });
+}
+if (typeof document !== 'undefined' && document.getElementById && document.getElementById('root')){
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initDashboard);
+  else initDashboard();
+}
+</script>
+</body>
+</html>
